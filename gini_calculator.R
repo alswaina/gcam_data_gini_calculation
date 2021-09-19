@@ -51,11 +51,13 @@ get_query_data <- function(file.path, query.number, col){
     stop('Could not read the query table!')
   }
   scenario <- unique(table[['scenario']])
+  regions.count <- length(table[['scenario']])
   
   record <- list(
     scenario = scenario,
     path = file.path,
     query.number = query.number,
+    regions.count = regions.count,
     table = table)
   return(record)
 }
@@ -86,12 +88,20 @@ build_file_structure <- function(setup) {
       }
     query.record <- c()
     query.number <- meta[["query.number"]]
-    query.record[[query.number]] <- list(path = meta[["path"]],
-                                      table = meta[["table"]])
+    
+    query.record[[query.number]] <- list(path = meta[["path"]],table = meta[["table"]], regions.count=meta[['regions.count']])
+    
     scenario <- meta[["scenario"]]
     queries.list[[scenario]] = c(queries.list[[scenario]], query.record)
   }
   return(queries.list)
+}
+
+is_equal_regions <- function(scenario, a = a.query.number, b = b.query.number, attribute = 'regions.count'){
+  a.regions.count <- scenario[[a]][[attribute]]
+  b.regions.count <- scenario[[b]][[attribute]]
+  equality <- a.regions.count == b.regions.count
+  return(equality)
 }
 
 validate.setup <- function(setup){
@@ -110,6 +120,14 @@ validate.setup <- function(setup){
       msg <- paste('SCENARIO MISSING:', '[', scenario,']', 'QUERY:','[', filter,']', '- scenario will be skipped for both queries!')
       message(msg)
       # delete scenario
+      queries.list[scenario] <- NULL 
+    }else if(!is_equal_regions(scenario = queries.list[[scenario]], a = a.query.number, b = b.query.number, attribute = 'regions.count')){
+      a.regions.count <- queries.list[[scenario]][[a.query.number]][['regions.count']]
+      b.regions.count <- queries.list[[scenario]][[b.query.number]][['regions.count']]
+      effected.query <- ifelse(a.regions.count<b.regions.count, a.query.number, b.query.number)
+      effected.count <- ifelse(a.regions.count<b.regions.count, a.regions.count, b.regions.count)
+      msg <- paste('UNEQUAL REGIONS:', '[', scenario,']', 'QUERY:','[', effected.query,'(', effected.count,')]', '- scenario will be skipped for both queries!')
+      message(msg)
       queries.list[scenario] <- NULL 
     }
   }

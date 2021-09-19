@@ -6,7 +6,7 @@ _Coming soon.._
 
 **SYNTAX:**
 
-<code>Rscript <file_script.R> -f <DATA_FOLDER>)</code>
+<code>Rscript <file_script.R> -f <DATA_FOLDER></code>
 
 **OPTIONS:**
 
